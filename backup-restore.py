@@ -148,7 +148,7 @@ def restore(dryrun=False):
         if item['Type'] == "Person":
             found_item = item_search(all_items, "Person", name=item['Name'])
         elif item['Type'] == "Episode" or item['Type'] == "Movie":
-            found_item = item_search(all_items, "Episode", name=item['Name'], series_name=item['SeriesName'], season_name=item['SeasonName'], imdbid=item.get('imdbid'), tmdbid=item.get('tmdbid'), tvdbid=item.get('tvdbid'))
+            found_item = item_search(all_items, "Episode", name=item.get('Name'), series_name=item.get('SeriesName'), season_name=item.get('SeasonName'), imdbid=item.get('imdbid'), tmdbid=item.get('tmdbid'), tvdbid=item.get('tvdbid'))
         if found_item:
             favorite_url = f"http://{jellyfin_url}:8096/Users/{userid}/FavoriteItems/{found_item['Id']}"
             favorite_params = {"apikey": apikey,
