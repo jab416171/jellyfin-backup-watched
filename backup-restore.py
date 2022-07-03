@@ -120,6 +120,8 @@ def restore(dryrun=False):
         if user['Name'] == username:
             userid = user['Id']
             break
+    if not userid:
+        print(f"User {username} not found")
 
     baseurl=f"http://{jellyfin_url}:8096/Items"
     params={"apikey": apikey,
@@ -148,14 +150,16 @@ def restore(dryrun=False):
         if item['Type'] == "Person":
             found_item = item_search(all_items, "Person", name=item['Name'])
         elif item['Type'] == "Episode" or item['Type'] == "Movie":
-            found_item = item_search(all_items, "Episode", name=item.get('Name'), series_name=item.get('SeriesName'), season_name=item.get('SeasonName'), imdbid=item.get('imdbid'), tmdbid=item.get('tmdbid'), tvdbid=item.get('tvdbid'))
+            found_item = item_search(all_items, item['Type'], name=item.get('Name'), series_name=item.get('SeriesName'), season_name=item.get('SeasonName'), imdbid=item.get('imdbid'), tmdbid=item.get('tmdbid'), tvdbid=item.get('tvdbid'))
         if found_item:
             favorite_url = f"http://{jellyfin_url}:8096/Users/{userid}/FavoriteItems/{found_item['Id']}"
             favorite_params = {"apikey": apikey,
                 "userId": userid,
-                "IsFavorite": item['IsFavorite']}
-            if not dryrun:
-                requests.post(favorite_url, params=favorite_params)
+                "IsFavorite": item['IsFavorite'],
+                "isPlayed": item.get('Played', False)}
+            if item['IsFavorite']:
+                if not dryrun:
+                    requests.post(favorite_url, params=favorite_params)
             if found_item['Type'] != "Person":
                 played_url = f"http://{jellyfin_url}:8096/Users/{userid}/PlayedItems/{found_item['Id']}"
                 played_params = {"apikey": apikey,
@@ -170,11 +174,11 @@ def item_search(items, type, name=None, series_name=None, season_name=None, imdb
     for item in items['Items']:
         if 'Type' in item and item['Type'] != type:
             continue
-        if name and 'Name' in item and item['Name'] != name:
+        if name and 'Name' in item and item['Name'].lower() != name.lower():
             continue
-        if series_name and 'SeriesName' in item and item['SeriesName'] != series_name:
+        if series_name and 'SeriesName' in item and item['SeriesName'].lower() != series_name.lower():
             continue
-        if season_name and 'SeasonName' in item and item['SeasonName'] != season_name:
+        if season_name and 'SeasonName' in item and item['SeasonName'].lower() != season_name.lower():
             continue
         if imdbid and 'ProviderIds' in item and item['ProviderIds']['Imdb'] != imdbid:
             continue
