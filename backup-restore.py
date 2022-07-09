@@ -17,11 +17,15 @@ def backup(username):
         print("Invalid API key")
         sys.exit(1)
     users = users.json()
+    userid = None
     for user in users:
         if user['Name'] == username:
             userid = user['Id']
             break
 
+    if not userid:
+        print(f"User {username} not found!")
+        sys.exit(1)
     user = requests.get(f"http://{jellyfin_url}:8096/Users/{userid}", params={"apikey": apikey, "userId": userid})
     username = user.json()['Name']
 
