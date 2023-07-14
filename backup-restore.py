@@ -156,21 +156,24 @@ def restore(dryrun=False):
         elif item['Type'] == "Episode" or item['Type'] == "Movie":
             found_item = item_search(all_items, item['Type'], name=item.get('Name'), series_name=item.get('SeriesName'), season_name=item.get('SeasonName'), imdbid=item.get('imdbid'), tmdbid=item.get('tmdbid'), tvdbid=item.get('tvdbid'))
         if found_item:
+            # favorites need to be first, because jellyfin marks items as played if they are favorited
             favorite_url = f"http://{jellyfin_url}:8096/Users/{userid}/FavoriteItems/{found_item['Id']}"
-            favorite_params = {"apikey": apikey,
-                "userId": userid,
-                "IsFavorite": item['IsFavorite'],
-                "isPlayed": item.get('Played', False)}
+            favorite_params = {"apikey": apikey}
             if item['IsFavorite']:
                 if not dryrun:
                     requests.post(favorite_url, params=favorite_params)
+            else:
+                if not dryrun:
+                    requests.delete(favorite_url, params=favorite_params)
             if found_item['Type'] != "Person":
                 played_url = f"http://{jellyfin_url}:8096/Users/{userid}/PlayedItems/{found_item['Id']}"
-                played_params = {"apikey": apikey,
-                    "userId": userid,
-                    "IsPlayed": item['Played']}
-                if not dryrun:
-                    requests.post(played_url, params=played_params)
+                played_params = {"apikey": apikey}
+                if item['Played']:
+                    if not dryrun:
+                        requests.post(played_url, params=played_params)
+                else:
+                    if not dryrun:
+                        requests.delete(played_url, params=played_params)
         else:
             print(f"Failed to restore {item['Type']} {item['Name']}")
 
